@@ -1,10 +1,7 @@
 import jwt,{JwtPayload} from 'jsonwebtoken'
 import { Express,Request,Response,NextFunction } from 'express';
 import { User } from '../model/models';
-
-interface MyRequest extends Request{
-  user ?: string | undefined |  (() => string);
-}
+import { MyRequest } from '../utils/typedef';
 
 export const generateToken = function(data: string|object){
   const key = process.env.KEY;

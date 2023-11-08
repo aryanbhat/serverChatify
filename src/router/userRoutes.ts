@@ -1,10 +1,7 @@
 import express, {Express,Request,Response} from 'express'
 import { generateToken, authenticate } from '../middleware/auth'
 import { User } from '../model/models';
-
-interface MyRequest extends Request{
-  user ?: string | undefined |  (() => string);
-}
+import { MyRequest } from '../utils/typedef';
 
 const router = express.Router();
 
@@ -46,7 +43,7 @@ router.get("/alluser", authenticate, async(req:MyRequest,res:Response)=>{
     ]
   } : {};
   const loggedUser = req.user;
-  const users = await User.find(keyword).find({_id: {$ne: loggedUser}});
+  const users = await User.find(keyword).find({_id: {$ne: loggedUser}}).sort('name');
   res.status(200).json(users);
 })
 
