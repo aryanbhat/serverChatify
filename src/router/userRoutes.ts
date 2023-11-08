@@ -1,7 +1,12 @@
-const express = require("express");
-const { generateToken, authenticate } = require("../middleware/auth");
+import express, {Express,Request,Response} from 'express'
+import { generateToken, authenticate } from '../middleware/auth'
+import { User } from '../model/models';
+
+interface MyRequest extends Request{
+  user ?: string | undefined |  (() => string);
+}
+
 const router = express.Router();
-const { User } = require("../model/models");
 
 
 router.post("/register", async (req, res) => {
@@ -12,7 +17,8 @@ router.post("/register", async (req, res) => {
     return;
   } else {
       let newUser = new User({ name, email, password, pic });
-      const token = generateToken({"username":newUser._id})
+      const id = newUser._id.toString();
+      const token = generateToken({"sub":id})
       await newUser.save();
     res.status(200).json({"message":"User created succesfully",token: token,user:newUser})
   }
@@ -22,7 +28,8 @@ router.post("/login", async(req,res)=>{
   const { email, password} = req.body;
   const user = await User.findOne({ email,password});
   if(user){
-    const token  = generateToken({username:user._id});
+    const id = user._id.toString();
+    const token  = generateToken({"sub":id});
     res.status(200).json({"message":"successfully logged in",token});
   }
   else{
@@ -30,7 +37,7 @@ router.post("/login", async(req,res)=>{
   }
 });
 
-router.get("/alluser", authenticate, async(req,res)=>{
+router.get("/alluser", authenticate, async(req:MyRequest,res:Response)=>{
   const keyword = req.query.search ? 
   {
     $or: [
@@ -38,9 +45,9 @@ router.get("/alluser", authenticate, async(req,res)=>{
       {email : {$regex: req.query.search, $options:'i'} }
     ]
   } : {};
-
-  const users = await User.find(keyword).find({_id: {$ne: req.user._id}});
-  res.status.json(users);
+  const loggedUser = req.user;
+  const users = await User.find(keyword).find({_id: {$ne: loggedUser}});
+  res.status(200).json(users);
 })
 
-module.exports = router;
+export default router;
