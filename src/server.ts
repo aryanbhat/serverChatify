@@ -2,7 +2,7 @@ import express, {Express,Request,Response} from 'express';
 import  dotenv from 'dotenv'
 import { conDb } from './config/db';
 import userRoutes from './router/userRoutes'
-// const chatRoutes = require('../router/chatRoutes')
+import chatRoutes from './router/chatRoutes'
 
 const app = express();
 dotenv.config();
@@ -12,7 +12,7 @@ conDb();
 app.use(express.json());
 
 app.use('/api/user',userRoutes);
-// app.use('/api/chat',chatRoutes);
+app.use('/api/chat',chatRoutes);
 
 
 app.get('/',(req,res)=>{

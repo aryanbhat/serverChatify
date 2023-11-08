@@ -1,10 +1,11 @@
-const express = require("express");
-const { authenticate } = require("../middleware/auth");
-const { Chat } = require("../model/models");
+import express from 'express'
+import { authenticate } from '../middleware/auth';
+import { Chat } from '../model/models';
+import { MyRequest } from '../utils/typedef';
 
 const router = express.Router();
 
-router.post("/", authenticate, async (req, res) => {
+router.post("/", authenticate, async (req:MyRequest, res) => {
   const { userId } = req.body;
 
   if (!userId) {
@@ -15,7 +16,7 @@ router.post("/", authenticate, async (req, res) => {
   const chat = await Chat.find({
     IsGroup: false,
     $and: [
-      { users: { $elemMatch: { $eq: req.user._id } } },
+      { users: { $elemMatch: { $eq: req.user } } },
       { users: { $elemMatch: { $eq: userId } } },
     ],
   })
@@ -28,13 +29,14 @@ router.post("/", authenticate, async (req, res) => {
     const chatData = {
       chatName: "sender",
       IsGroup: false,
-      users: [req.user._id, userId],
+      users: [req.user, userId],
     };
 
-    const newChat = new Chat(chatData);
+    const newChat = await new Chat(chatData);
     await newChat.save();
-    res.json(newChat);
+    const existing = await Chat.findById(newChat._id).populate("users","-password -__v").populate("LatestMessage")
+    res.json(existing);
   }
 });
 
-module.exports = router;
+export default router;
